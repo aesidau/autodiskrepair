@@ -89,8 +89,8 @@ plug_off()  → turn smart plug off, retry once on network error
 Wraps `uhubctl`. Hub has ganged switching so there is no port argument.
 
 ```
-hub_on()    → uhubctl -l <location> -a on
-hub_off()   → uhubctl -l <location> -a off
+hub_on()    → uhubctl -l <location> -a on  -f
+hub_off()   → uhubctl -l <location> -a off -f
 ```
 
 Both raise on non-zero exit code.
