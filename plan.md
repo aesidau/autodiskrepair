@@ -36,8 +36,8 @@ autodiskrepair/
 
 ```yaml
 tapo:
-  ip: "192.168.x.x"
-  email: "user@example.com"
+  ip: "192.168.0.197"
+  email: "email@domain.id.au"
   password: "secret"
 
 hub:
