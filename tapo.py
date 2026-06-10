@@ -1,8 +1,8 @@
 import asyncio
 import logging
 
-from plugp100.new.tapodevice import TapoDevice
-from plugp100.api.auth_credential import AuthCredential
+from plugp100.common.credentials import AuthCredential
+from plugp100.new.device_factory import connect, DeviceConnectConfiguration
 
 logger = logging.getLogger(__name__)
 
@@ -15,13 +15,14 @@ class TapoPlug:
 
     async def _set(self, on: bool) -> None:
         creds = AuthCredential(self.email, self.password)
-        device = TapoDevice.create(self.ip, creds)
+        config = DeviceConnectConfiguration(host=self.ip, credentials=creds)
+        device = await connect(config)
         await device.update()
         if on:
             await device.turn_on()
         else:
             await device.turn_off()
-        await device.close()
+        await device.client.close()
 
     def _run(self, on: bool) -> None:
         for attempt in range(2):
