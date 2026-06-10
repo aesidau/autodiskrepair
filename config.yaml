@@ -1,0 +1,35 @@
+tapo:
+  ip: "192.168.0.197"
+  email: "andrew@aes.id.au"
+  password: "secret"
+
+hub:
+  location: "1-1"          # run `uhubctl` with no args on the Pi to confirm
+
+drives:
+  broken_model: "ST1000DM"
+  recovery_model: "One Touch"
+  recovery_mount: "/mnt/backup"
+  image: "/mnt/backup/lynnedisk.img"
+  mapfile: "/mnt/backup/mapfile.log"
+
+timeouts:
+  power_settle: 10
+  hub_settle: 5
+  device_appear: 90
+  recovery_appear: 60
+
+failure:
+  dmesg_patterns:
+    - "I/O error"
+    - "SCSI error"
+    - "Device offlined"
+    - "reset \\S+ USB device"
+    - "[Tt]imed out|timeout"
+    - "failed command"
+  no_progress_limit: 5
+
+logging:
+  file: "/mnt/backup/autodiskrepair.log"
+  max_bytes: 10485760
+  backup_count: 5
