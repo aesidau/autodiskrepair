@@ -30,6 +30,6 @@ failure:
   no_progress_limit: 5
 
 logging:
-  file: "/mnt/backup/autodiskrepair.log"
+  file: "/var/log/autodiskrepair.log"
   max_bytes: 10485760
   backup_count: 5
