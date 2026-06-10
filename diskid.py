@@ -75,8 +75,8 @@ def _parse_dmesg_for_device(output: str, model_substring: str, min_kernel_time: 
         return None
 
     for m in scsi_dev_re.finditer(output):
-        addr, devname = m.group(2), m.group(3)
-        if addr in matching_addrs:
+        ts, addr, devname = float(m.group(1)), m.group(2), m.group(3)
+        if ts >= min_kernel_time and addr in matching_addrs:
             return f"/dev/{devname}"
 
     return None
