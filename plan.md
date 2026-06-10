@@ -44,7 +44,7 @@ hub:
   location: "1-1"          # uhubctl hub location (run `uhubctl` with no args to find)
 
 drives:
-  broken_model: "ST1000DM003"   # substring to match in lsblk MODEL for broken drive
+  broken_model: "ST1000DM"      # substring to match in lsblk MODEL for broken drive
   recovery_model: "One Touch"   # substring to match for recovery drive
   recovery_mount: "/mnt/backup"
   image: "/mnt/backup/lynnedisk.img"
@@ -60,8 +60,9 @@ failure:
   dmesg_patterns:         # regex list — any match triggers a failure event
     - "I/O error"
     - "SCSI error"
-    - "reset \\w+ speed USB device"
-    - "timeout"
+    - "Device offlined"
+    - "reset \\S+ USB device"
+    - "[Tt]imed out|timeout"
     - "failed command"
   no_progress_limit: 5    # give up after this many consecutive zero-progress cycles
 
