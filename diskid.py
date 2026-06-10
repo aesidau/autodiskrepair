@@ -7,10 +7,15 @@ import time
 logger = logging.getLogger(__name__)
 
 
-def find_device(model_substring: str, timeout: int) -> str | None:
-    """Poll lsblk and dmesg until a block device whose MODEL contains model_substring appears."""
+def find_device(model_substring: str, timeout: int, since: float | None = None) -> str | None:
+    """Poll lsblk and dmesg until a block device whose MODEL contains model_substring appears.
+
+    since: wall-clock time (time.time()) before which dmesg events are ignored.
+           Defaults to the call time if not provided. Pass a timestamp from before
+           hub_on() to catch drives that enumerate during the hub-settle sleep.
+    """
     logger.info("Waiting up to %ds for drive matching '%s'", timeout, model_substring)
-    start_wall = time.time()
+    start_wall = since if since is not None else time.time()
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         dev = _lsblk_find(model_substring)

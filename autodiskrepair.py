@@ -89,11 +89,14 @@ def main() -> None:
             log.info("Waiting %ds for SATA adapter to power up", timeouts["power_settle"])
             time.sleep(timeouts["power_settle"])
             hub.hub_on()
+            hub_on_time = time.time()
             log.info("Waiting %ds for USB bus to stabilise", timeouts["hub_settle"])
             time.sleep(timeouts["hub_settle"])
 
             # --- Wait for recovery drive, then mount ---
-            recovery_dev = diskid.find_device(drives["recovery_model"], timeouts["recovery_appear"])
+            # Pass hub_on_time so dmesg is scanned from before the hub_settle sleep — the
+            # recovery drive can enumerate during that sleep and would otherwise be missed.
+            recovery_dev = diskid.find_device(drives["recovery_model"], timeouts["recovery_appear"], since=hub_on_time)
             if recovery_dev is None:
                 log.error("Recovery drive did not appear — aborting to avoid data loss")
                 tapo.plug_off()
