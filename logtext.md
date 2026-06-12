@@ -1,6 +1,6 @@
 # AutoDiskRepair — Text examples from logs and console commands
 
-## example dmesg log when broken drive attaches as /dev/sdb
+## example 1 of dmesg log when broken drive attaches as /dev/sdb
 ```
 [ 1052.745926] usb 1-1.2: new high-speed USB device number 5 using dwc_otg
 [ 1052.834778] usb 1-1.2: New USB device found, idVendor=152d, idProduct=2338, bcdDevice= 1.00
@@ -20,6 +20,49 @@
 [ 1053.881570] sd 1:0:0:0: [sdb] Assuming drive cache: write through
 [ 1053.918685]  sdb: sdb1 sdb2 sdb3
 [ 1053.919709] sd 1:0:0:0: [sdb] Attached SCSI disk
+```
+## example 2 of dmesg log when broken drive attaches as /dev/sda
+```
+[  162.385097] dwc_otg_handle_wakeup_detected_intr lxstate = 2
+[  162.799047] usb 1-1.2: new high-speed USB device number 4 using dwc_otg
+[  162.887887] usb 1-1.2: New USB device found, idVendor=152d, idProduct=2338, bcdDevice= 1.00
+[  162.887925] usb 1-1.2: New USB device strings: Mfr=1, Product=2, SerialNumber=5
+[  162.887942] usb 1-1.2: Product: USB to ATA/ATAPI bridge
+[  162.887956] usb 1-1.2: Manufacturer: JMicron
+[  162.887969] usb 1-1.2: SerialNumber: 000000000000
+[  162.889789] usb-storage 1-1.2:1.0: USB Mass Storage device detected
+[  162.890505] usb-storage 1-1.2:1.0: Quirks match for vid 152d pid 2338: 800000
+[  162.890704] scsi host0: usb-storage 1-1.2:1.0
+[  163.899738] scsi 0:0:0:0: Direct-Access     ST1000DM 003-1CH162            PQ: 0 ANSI: 5
+[  163.904182] sd 0:0:0:0: Attached scsi generic sg0 type 0
+[  195.646830] usb 1-1.2: reset high-speed USB device number 4 using dwc_otg
+[  195.735681] sd 0:0:0:0: [sda] 1953525168 512-byte logical blocks: (1.00 TB/932 GiB)
+[  226.366707] usb 1-1.2: reset high-speed USB device number 4 using dwc_otg
+[  226.455269] sd 0:0:0:0: [sda] Write Protect is off
+[  226.455308] sd 0:0:0:0: [sda] Mode Sense: 00 00 00 00
+[  240.927170] usb 1-1.2: USB disconnect, device number 4
+[  240.946807] sd 0:0:0:0: [sda] Asking for cache data failed
+[  240.946848] sd 0:0:0:0: [sda] Assuming drive cache: write through
+[  240.950515] sd 0:0:0:0: [sda] Attached SCSI disk
+[  257.838068] dwc_otg_handle_wakeup_detected_intr lxstate = 2
+[  258.278596] usb 1-1.2: new high-speed USB device number 5 using dwc_otg
+[  258.367433] usb 1-1.2: New USB device found, idVendor=152d, idProduct=2338, bcdDevice= 1.00
+[  258.367473] usb 1-1.2: New USB device strings: Mfr=1, Product=2, SerialNumber=5
+[  258.367490] usb 1-1.2: Product: USB to ATA/ATAPI bridge
+[  258.367504] usb 1-1.2: Manufacturer: JMicron
+[  258.367517] usb 1-1.2: SerialNumber: 000000000000
+[  258.371412] usb-storage 1-1.2:1.0: USB Mass Storage device detected
+[  258.372299] usb-storage 1-1.2:1.0: Quirks match for vid 152d pid 2338: 800000
+[  258.372700] scsi host0: usb-storage 1-1.2:1.0
+[  259.486493] scsi 0:0:0:0: Direct-Access     ST1000DM 003-1CH162            PQ: 0 ANSI: 5
+[  259.489840] sd 0:0:0:0: Attached scsi generic sg0 type 0
+[  259.545838] sd 0:0:0:0: [sda] 1953525168 512-byte logical blocks: (1.00 TB/932 GiB)
+[  259.546344] sd 0:0:0:0: [sda] Write Protect is off
+[  259.546365] sd 0:0:0:0: [sda] Mode Sense: 28 00 00 00
+[  259.546886] sd 0:0:0:0: [sda] No Caching mode page found
+[  259.546907] sd 0:0:0:0: [sda] Assuming drive cache: write through
+[  259.635148]  sda: sda1 sda2 sda3
+[  259.635833] sd 0:0:0:0: [sda] Attached SCSI disk
 ```
 ## example 1 of dmesg log when broken drive stops working
 ```
