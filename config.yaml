@@ -3,9 +3,6 @@ tapo:
   email: "andrew@aes.id.au"
   password: "secret"
 
-hub:
-  location: "1-1"          # run `uhubctl` with no args on the Pi to confirm
-
 drives:
   broken_model: "ST1000DM"
   recovery_model: "One Touch"
@@ -15,7 +12,6 @@ drives:
 
 timeouts:
   power_settle: 10
-  hub_settle: 5
   device_appear: 90
   recovery_appear: 60
 

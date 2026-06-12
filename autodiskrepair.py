@@ -12,7 +12,6 @@ import diskid
 import dmesg as dmesg_mod
 import logger as logger_mod
 import tapo as tapo_mod
-import usbhub as usbhub_mod
 
 log = logging.getLogger(__name__)
 
@@ -47,7 +46,6 @@ def main() -> None:
         cfg["tapo"]["email"],
         cfg["tapo"]["password"],
     )
-    hub = usbhub_mod.UsbHub(cfg["hub"]["location"])
     monitor = dmesg_mod.DmesgMonitor(cfg["failure"]["dmesg_patterns"])
     monitor.start()
 
@@ -74,33 +72,22 @@ def main() -> None:
             if ddrescue_handle is not None:
                 ddrescue.stop(ddrescue_handle)
                 ddrescue_handle = None
-            # Unmount before hub_off: both drives share the hub, so cutting USB without unmounting
-            # first would corrupt the filesystem on the recovery drive.
             unmount(recovery_mount)
-            # Hub off before plug off: disconnect USB before removing SATA power to avoid a brief
-            # powered-but-not-connected state that can confuse the device on the next reconnect.
-            hub.hub_off()
             tapo.plug_off()
             log.info("Waiting %ds for full power-down", timeouts["power_settle"])
             time.sleep(timeouts["power_settle"])
 
             # --- Power-up phase ---
             tapo.plug_on()
-            log.info("Waiting %ds for SATA adapter to power up", timeouts["power_settle"])
+            plug_on_time = time.time()
+            log.info("Waiting %ds for drives to power up", timeouts["power_settle"])
             time.sleep(timeouts["power_settle"])
-            hub.hub_on()
-            hub_on_time = time.time()
-            log.info("Waiting %ds for USB bus to stabilise", timeouts["hub_settle"])
-            time.sleep(timeouts["hub_settle"])
 
             # --- Wait for recovery drive, then mount ---
-            # Pass hub_on_time so dmesg is scanned from before the hub_settle sleep — the
-            # recovery drive can enumerate during that sleep and would otherwise be missed.
-            recovery_dev = diskid.find_device(drives["recovery_model"], timeouts["recovery_appear"], since=hub_on_time)
+            recovery_dev = diskid.find_device(drives["recovery_model"], timeouts["recovery_appear"], since=plug_on_time)
             if recovery_dev is None:
                 log.error("Recovery drive did not appear — aborting to avoid data loss")
                 tapo.plug_off()
-                hub.hub_off()
                 sys.exit(1)
             mount(recovery_dev + "1", recovery_mount)
             log.info("Recovery drive mounted at %s", recovery_mount)
@@ -161,7 +148,6 @@ def main() -> None:
         if ddrescue_handle is not None:
             ddrescue.stop(ddrescue_handle)
         unmount(recovery_mount)
-        hub.hub_off()
         tapo.plug_off()
         monitor.stop()
         log.info("AutoDiskRepair finished")
