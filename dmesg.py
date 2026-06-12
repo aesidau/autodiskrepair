@@ -45,9 +45,21 @@ class DmesgMonitor:
                         logger.debug("dmesg failure match: %s", line)
                     break  # avoid queuing the same line twice if it matches multiple patterns
 
-    def wait_for_failure(self, proc: subprocess.Popen | None = None, timeout: float | None = None) -> str | None:
-        """Block until a failure pattern matches or proc exits. Returns the matched line, or None."""
+    def wait_for_failure(
+        self,
+        proc: subprocess.Popen | None = None,
+        timeout: float | None = None,
+        progress_fn=None,
+        stall_timeout: float | None = None,
+    ) -> str | None:
+        """Block until a failure pattern matches or proc exits. Returns the matched line, or None.
+
+        progress_fn: callable returning current bytes recovered (used for stall detection).
+        stall_timeout: seconds of no mapfile progress before treating as a silent hang.
+        """
         deadline = time.monotonic() + timeout if timeout is not None else None
+        last_bytes = progress_fn() if progress_fn is not None else 0
+        last_progress_time = time.monotonic()
         while True:
             if deadline is not None:
                 remaining = deadline - time.monotonic()
@@ -63,6 +75,16 @@ class DmesgMonitor:
                 if proc is not None and proc.poll() is not None:
                     logger.info("ddrescue process exited (rc=%d)", proc.returncode)
                     return None
+                if progress_fn is not None and stall_timeout is not None:
+                    current_bytes = progress_fn()
+                    if current_bytes > last_bytes:
+                        last_bytes = current_bytes
+                        last_progress_time = time.monotonic()
+                    elif time.monotonic() - last_progress_time >= stall_timeout:
+                        logger.warning(
+                            "No mapfile progress for %.0fs — treating as silent hang", stall_timeout
+                        )
+                        return None
 
     def clear_failure(self) -> None:
         cleared = 0

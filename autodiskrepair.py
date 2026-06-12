@@ -101,7 +101,11 @@ def main() -> None:
                 "first" if first_pass else "subsequent",
             )
 
-            monitor.wait_for_failure(proc=ddrescue_handle)
+            monitor.wait_for_failure(
+                proc=ddrescue_handle,
+                progress_fn=lambda: ddrescue.bytes_recovered(mapfile),
+                stall_timeout=cfg["failure"].get("stall_timeout", 120),
+            )
             log.info("Failure detected (or ddrescue exited) — stopping ddrescue")
 
             # --- End-of-cycle accounting ---

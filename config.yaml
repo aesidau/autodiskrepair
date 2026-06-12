@@ -22,6 +22,7 @@ failure:
     - "[Tt]imed out|timeout"
     - "failed command"
   no_progress_limit: 5
+  stall_timeout: 120
 
 logging:
   file: "/var/log/autodiskrepair.log"
