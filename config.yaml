@@ -5,7 +5,6 @@ tapo:
 
 drives:
   broken_model: "ST1000DM"
-  recovery_model: "One Touch"
   recovery_mount: "/mnt/backup"
   image: "/mnt/backup/lynnedisk.img"
   mapfile: "/mnt/backup/mapfile.log"
@@ -13,7 +12,6 @@ drives:
 timeouts:
   power_settle: 10
   device_appear: 120
-  recovery_appear: 60
 
 failure:
   dmesg_patterns:

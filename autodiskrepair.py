@@ -27,12 +27,6 @@ def unmount(path: str) -> None:
         log.warning("umount %s returned rc=%d: %s", path, result.returncode, result.stderr.strip())
 
 
-def mount(device: str, path: str) -> None:
-    result = subprocess.run(["mount", device, path], capture_output=True, text=True)
-    if result.returncode != 0:
-        raise RuntimeError(f"mount {device} at {path} failed (rc={result.returncode}): {result.stderr.strip()}")
-
-
 def main() -> None:
     config_path = os.path.join(os.path.dirname(__file__), "config.yaml")
     cfg = load_config(config_path)
@@ -56,6 +50,11 @@ def main() -> None:
     recovery_mount = drives["recovery_mount"]
     no_progress_limit = cfg["failure"]["no_progress_limit"]
 
+    if not os.path.ismount(recovery_mount):
+        log.error("Recovery drive not mounted at %s — aborting", recovery_mount)
+        sys.exit(1)
+    log.info("Recovery drive available at %s", recovery_mount)
+
     consecutive_no_progress = 0
     cycle = 0
     ddrescue_handle = None
@@ -72,25 +71,14 @@ def main() -> None:
             if ddrescue_handle is not None:
                 ddrescue.stop(ddrescue_handle)
                 ddrescue_handle = None
-            unmount(recovery_mount)
             tapo.plug_off()
             log.info("Waiting %ds for full power-down", timeouts["power_settle"])
             time.sleep(timeouts["power_settle"])
 
             # --- Power-up phase ---
             tapo.plug_on()
-            plug_on_time = time.time()
             log.info("Waiting %ds for drives to power up", timeouts["power_settle"])
             time.sleep(timeouts["power_settle"])
-
-            # --- Wait for recovery drive, then mount ---
-            recovery_dev = diskid.find_device(drives["recovery_model"], timeouts["recovery_appear"], since=plug_on_time)
-            if recovery_dev is None:
-                log.error("Recovery drive did not appear — aborting to avoid data loss")
-                tapo.plug_off()
-                sys.exit(1)
-            mount(recovery_dev + "1", recovery_mount)
-            log.info("Recovery drive mounted at %s", recovery_mount)
 
             # --- Wait for broken drive ---
             broken_dev = diskid.find_device(drives["broken_model"], timeouts["device_appear"])
