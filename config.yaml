@@ -10,7 +10,7 @@ drives:
   mapfile: "/mnt/backup/mapfile.log"
 
 timeouts:
-  power_settle: 10
+  power_off_settle: 20
   device_appear: 120
 
 failure:

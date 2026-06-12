@@ -72,13 +72,11 @@ def main() -> None:
                 ddrescue.stop(ddrescue_handle)
                 ddrescue_handle = None
             tapo.plug_off()
-            log.info("Waiting %ds for full power-down", timeouts["power_settle"])
-            time.sleep(timeouts["power_settle"])
+            log.info("Waiting %ds for full power-down", timeouts["power_off_settle"])
+            time.sleep(timeouts["power_off_settle"])
 
             # --- Power-up phase ---
             tapo.plug_on()
-            log.info("Waiting %ds for drives to power up", timeouts["power_settle"])
-            time.sleep(timeouts["power_settle"])
 
             # --- Wait for broken drive ---
             broken_dev = diskid.find_device(drives["broken_model"], timeouts["device_appear"])
