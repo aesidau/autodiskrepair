@@ -93,9 +93,6 @@ def main() -> None:
             log.info("Recovery drive mounted at %s", recovery_mount)
 
             # --- Wait for broken drive ---
-            # dmesg --follow replays the full kernel ring buffer on startup; drain any events from
-            # the previous cycle before we start watching for new failures on this one.
-            monitor.clear_failure()
             broken_dev = diskid.find_device(drives["broken_model"], timeouts["device_appear"])
             if broken_dev is None:
                 log.warning("Broken drive did not appear this cycle")
@@ -107,6 +104,9 @@ def main() -> None:
                 continue
 
             # --- Run ddrescue ---
+            # Drain any failure events that accumulated during enumeration (USB resets from a
+            # struggling drive match failure patterns but are not operational failures).
+            monitor.clear_failure()
             first_pass = not os.path.exists(mapfile)  # mapfile existence is the canonical indicator of a prior run
             ddrescue_handle = ddrescue.start(broken_dev, image, mapfile, first_pass)
             log.info(

@@ -12,7 +12,7 @@ drives:
 
 timeouts:
   power_settle: 10
-  device_appear: 90
+  device_appear: 120
   recovery_appear: 60
 
 failure:

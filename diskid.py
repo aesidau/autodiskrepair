@@ -64,6 +64,13 @@ def _parse_dmesg_for_device(output: str, model_substring: str, min_kernel_time: 
     scsi_dev_re = re.compile(
         r"^\[\s*([\d.]+)\]\s+sd\s+(\S+):\s+\[(\w+)\]\s+Attached SCSI disk", re.MULTILINE
     )
+    # Matches: [  123.456]  sdX: sdX1 sdX2 sdX3
+    # This line only appears when the kernel successfully reads the partition table — it is absent
+    # on a drive that fails mid-enumeration, so it is a more reliable readiness signal than
+    # "Attached SCSI disk" (which can appear even after a USB disconnect).
+    partition_re = re.compile(
+        r"^\[\s*([\d.]+)\]\s+(\w+):\s+\2\d+", re.MULTILINE
+    )
 
     matching_addrs = set()
     for m in scsi_model_re.finditer(output):
@@ -74,9 +81,15 @@ def _parse_dmesg_for_device(output: str, model_substring: str, min_kernel_time: 
     if not matching_addrs:
         return None
 
+    partitioned_devs = set()
+    for m in partition_re.finditer(output):
+        ts, dev = float(m.group(1)), m.group(2)
+        if ts >= min_kernel_time:
+            partitioned_devs.add(dev)
+
     for m in scsi_dev_re.finditer(output):
         ts, addr, devname = float(m.group(1)), m.group(2), m.group(3)
-        if ts >= min_kernel_time and addr in matching_addrs:
+        if ts >= min_kernel_time and addr in matching_addrs and devname in partitioned_devs:
             return f"/dev/{devname}"
 
     return None
