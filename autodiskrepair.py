@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import logging
 import os
-import subprocess
 import sys
 import time
 
@@ -20,11 +19,6 @@ def load_config(path: str) -> dict:
     with open(path) as f:
         return yaml.safe_load(f)
 
-
-def unmount(path: str) -> None:
-    result = subprocess.run(["umount", path], capture_output=True, text=True)
-    if result.returncode not in (0, 32):
-        log.warning("umount %s returned rc=%d: %s", path, result.returncode, result.stderr.strip())
 
 
 def main() -> None:
@@ -137,7 +131,6 @@ def main() -> None:
     finally:
         if ddrescue_handle is not None:
             ddrescue.stop(ddrescue_handle)
-        unmount(recovery_mount)
         tapo.plug_off()
         monitor.stop()
         log.info("AutoDiskRepair finished")
