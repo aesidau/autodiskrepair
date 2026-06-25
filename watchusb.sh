@@ -11,6 +11,10 @@ setopt extendedglob
 # This line is needed for detecting timeout
 zmodload zsh/datetime
 
+# Capture the dmesg stream to a uniquely-named log file in the current dir
+LOGFILE="dmesg-$(date +%Y%m%d-%H%M%S).log"
+printf 'Logging dmesg capture to %s\n' "$LOGFILE"
+
 power_cycle() {
   afplay "$SOUND1" & 
   ssh -n -l "$USER" "$HOST" 'sudo pkill -INT -x ddrescue'
@@ -37,6 +41,7 @@ while true; do
     printf '%s\n' "$line"
     clean=${line//$'\e'\[[0-9;]#m/}  # strip ANSI colour/formatting codes
     clean=${clean%$'\r'}             # strip trailing CR from the PTY
+    printf '%s\n' "$clean" >> "$LOGFILE"  # mirror to the log file (sans ANSI/CR)
 
     case "$clean" in
       *"reset high-speed USB device number"*"using dwc_otg"*)
