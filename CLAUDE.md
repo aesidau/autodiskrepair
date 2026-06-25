@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AutoDiskRepair automates repeated `ddrescue` recovery cycles for a failing 1TB Seagate Barracuda drive. The drive survives ~10 minutes of reads before failing, but power-cycling resets it. The automation runs on a Raspberry Pi Zero 2 W and handles the full loop: power on → wait for the drive to enumerate → run `ddrescue` → detect failure/stall → halt `ddrescue` → power off → repeat. It gives up after too many no-progress cycles, and stops cleanly once the mapfile shows full recovery.
+AutoDiskRepair automates repeated `ddrescue` recovery cycles for a failing 1TB Seagate Barracuda drive. The drive survives ~2 minutes (previously ~10 minutes) of reads before failing, but power-cycling resets it. The automation runs on a Raspberry Pi Zero 2 W and handles the full loop: power on → wait for the drive to enumerate → run `ddrescue` → detect failure/stall → halt `ddrescue` → power off → repeat. It gives up after too many no-progress cycles, and stops cleanly once the mapfile shows full recovery.
 
 ## Hardware Setup
 
@@ -16,6 +16,8 @@ AutoDiskRepair automates repeated `ddrescue` recovery cycles for a failing 1TB S
 | Recovery drive | 2TB Seagate One Touch USB → `/dev/sda1`, mounted at `/mnt/backup` — on its own power, unaffected by the smart plug |
 | Controller | Raspberry Pi Zero 2 W (running Home Assistant, has `ddrescue`) |
 | Hub | 4-port powered USB3 hub — both drives connect through it, but the hub itself is left powered at all times (see Constraints) |
+| USB Y cable | Connects the USB adapter to the Hub, but breaks out the power line so that when the Hub is powered, that power doesn't flow to the USB adapter |
+| Second power supply | 5V 2A, also powered by the same TP-Link Tapo P100 smart plug as above - providing USB power to the USB Y cable |
 
 ## Implementation
 
@@ -70,5 +72,4 @@ Failure detection patterns and all timeouts live in `config.yaml`, not hardcoded
 ## Other Scripts (manual/companion tooling, not part of the main loop)
 
 - `watchusb.sh` — run from a separate machine (not the Pi), SSHes in to tail `dmesg` remotely and acts as a safety net during **manual/interactive** `ddrescue` sessions: on a USB reset burst or `HANG_TIMEOUT` (150 s) of log silence, it kills `ddrescue` on the Pi and turns the plug off via `plug.py`, but does not turn it back on or restart anything automatically. Tracks drive-ready state (via the `sdX: sdX1 sdX2...` partition line) so it won't cut power while the drive is still stabilising after a reset.
-- `test.sh`, `text.txt` — untracked scratch files used while developing the `dmesg`-pattern matching in `watchusb.sh`; not maintained tooling.
 - `ddrescue-harness-spec.md` — untracked draft spec for a more advanced harness (phased fast-copy/trim/scrape, forward/reverse direction alternation) that is **not implemented** by the current `autodiskrepair.py`. Treat it as future-direction design material, not a description of current behavior.
