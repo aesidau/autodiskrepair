@@ -4,7 +4,7 @@
 set -euo pipefail
 
 src="/mnt/backup/mapfile.log"
-dest="$HOME/autodiskrepair/mapfile-$(date +%b%d_%H.%M).log"
+dest="$HOME/autodiskrepair/mapfile-$(date -r "$src" +%b%d_%H.%M).log"
 
 cp "$src" "$dest"
 echo "Copied $src -> $dest"
