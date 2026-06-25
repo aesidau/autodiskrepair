@@ -14,7 +14,7 @@ zmodload zsh/datetime
 power_cycle() {
   afplay "$SOUND1" & 
   ssh -n -l "$USER" "$HOST" 'sudo pkill -INT -x ddrescue'
-  sleep 3
+  sleep 4
   ssh -n -l "$USER" "$HOST" 'cd ~/autodiskrepair && python plug.py off > /dev/null' 
 }
 
