@@ -4,4 +4,4 @@
 set -euo pipefail
 
 cd /home/pi/autodiskrepair
-sudo ddrescue -n -m ntfs/domain_used.log /dev/sdb /mnt/backup/lynnedisk.img /mnt/backup/mapfile.log
+ddrescue -n -m ntfs/domain_used.log /dev/sdb /mnt/backup/lynnedisk.img /mnt/backup/mapfile.log
