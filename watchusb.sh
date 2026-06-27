@@ -24,6 +24,8 @@ power_cycle() {
 
 armed=0
 deadline=0
+reset_count=0       # consecutive "reset high-speed USB device number" lines
+RESET_LIMIT=4       # this many in a row triggers a power cycle
 # Have the drives already appeared at startup?
 # Pass "ready" (or 1/yes/true) as the first argument in cases where you
 # start the log monitor after the drives have already appeared.
@@ -45,21 +47,31 @@ while true; do
 
     case "$clean" in
       *"reset high-speed USB device number"*"using dwc_otg"*)
-        if (( $drives_ready )); then
+        (( reset_count++ ))
+        if (( $reset_count >= $RESET_LIMIT )); then
+          # too many resets in a row: the drive is thrashing, power cycle it
           power_cycle
           armed=0
           drives_ready=0
+          reset_count=0
+        elif (( $drives_ready )); then
+          power_cycle
+          armed=0
+          drives_ready=0
+          reset_count=0
         else
           armed=1
           # start the countdown for needing to power cycle
           deadline=$(( $EPOCHREALTIME + $HANG_TIMEOUT ))
         fi ;;
       *"]  sd"[bcd]": sd"[bcd]"1 sd"[bcd]"2"*)
-        afplay "$SOUND2" & 
-        drives_ready=1 
-        armed=0 ;;
+        afplay "$SOUND2" &
+        drives_ready=1
+        armed=0
+        reset_count=0 ;;
       *)
-        armed=0 ;;  # any other message, things could be working fine
+        armed=0          # any other message, things could be working fine
+        reset_count=0 ;; # the reset streak was broken
     esac
   else
     # read returned non-zero: a POLL timeout, or the stream closed
