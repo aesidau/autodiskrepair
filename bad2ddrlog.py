@@ -36,12 +36,6 @@ def parse_args(argv=None):
                         "default: no upper bound")
     p.add_argument("-f", "--file", default="domain_files.log",
                    help="completed ddrescue mapfile to write (default: domain_files.log)")
-    p.add_argument("--blocks",
-                   help="also write the raw '0xstart 0xlen +' block list here "
-                        "(default: not written)")
-    p.add_argument("--synthetic",
-                   help="path to write the intermediate synthetic mapfile "
-                        "(default: a temporary file, removed on exit)")
     return p.parse_args(argv)
 
 
@@ -101,13 +95,6 @@ def coalesce_runs(clusters):
     return runs
 
 
-def write_blocks(path, runs, offset, cluster_size):
-    """Write the '0xstart 0xlen +' block list for the given runs."""
-    with open(path, "w") as out:
-        for s, length in runs:
-            out.write(f"0x{offset + s*cluster_size:x}  0x{length*cluster_size:x}  +\n")
-
-
 def write_synthetic(path, runs, offset, cluster_size):
     """Write a synthetic ddrescue mapfile: a leading '?' status line then the runs.
 
@@ -130,22 +117,13 @@ def main(argv=None):
     clusters = collect_clusters(inodes, args.img, sector_offset, args.max_cluster)
     runs = coalesce_runs(clusters)
 
-    if args.blocks:
-        write_blocks(args.blocks, runs, args.offset, args.cluster_size)
-
     total = sum(length * args.cluster_size for _, length in runs)
     print(f"{len(inodes)} files, {len(clusters)} clusters, "
           f"{total/1048576:.1f} MB across {len(runs)} runs")
 
-    # Build the synthetic mapfile (a real temp file unless the user wants to keep it).
-    if args.synthetic:
-        synthetic = args.synthetic
-        cleanup = False
-    else:
-        fd, synthetic = tempfile.mkstemp(suffix=".map", prefix="synthetic-")
-        os.close(fd)
-        cleanup = True
-
+    # Build the synthetic mapfile in a temp file, removed once we're done.
+    fd, synthetic = tempfile.mkstemp(suffix=".map", prefix="synthetic-")
+    os.close(fd)
     try:
         write_synthetic(synthetic, runs, args.offset, args.cluster_size)
         try:
@@ -155,8 +133,7 @@ def main(argv=None):
         except subprocess.CalledProcessError as e:
             sys.exit(f"ddrescuelog --complete-mapfile failed: {e}")
     finally:
-        if cleanup:
-            os.unlink(synthetic)
+        os.unlink(synthetic)
 
     print(f"\n--- ddrescuelog -t {args.file} ---")
     subprocess.run(["ddrescuelog", "-t", args.file])
