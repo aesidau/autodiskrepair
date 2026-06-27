@@ -20,10 +20,12 @@ import os
 def parse_args(argv=None):
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("bad",
-                   help="ntfsfindbad log to read 'inode=NNNN' lines from")
-    p.add_argument("img",
-                   help="disk image (or device) the NTFS partition lives in")
+    p.add_argument("findbad_log",
+                   help="ddru_ntfsfindbad output log (default ntfsfindbad.log), or a "
+                        "filtered extract of it, to read 'inode=NNNN' lines from")
+    p.add_argument("image",
+                   help="ddrescue output image: a block file representing the disk the "
+                        "NTFS partition lives in (not the mapfile)")
     p.add_argument("-o", "--offset", type=int, required=True,
                    help="partition start, in bytes (e.g. sdb2 start)")
     p.add_argument("-s", "--sector-size", type=int, default=512,
@@ -56,7 +58,7 @@ def read_inodes(path):
     return inodes
 
 
-def collect_clusters(inodes, img, sector_offset, max_cluster):
+def collect_clusters(inodes, image, sector_offset, max_cluster):
     """Run `istat` on each inode and collect its data-unit (cluster) numbers."""
     # A line is a data-unit list only if it's entirely whitespace-separated integers.
     num_line = re.compile(r'^\s*\d+(?:\s+\d+)*\s*$')
@@ -64,7 +66,7 @@ def collect_clusters(inodes, img, sector_offset, max_cluster):
     for inode in inodes:
         try:
             out = subprocess.run(
-                ["istat", "-o", str(sector_offset), img, inode],
+                ["istat", "-o", str(sector_offset), image, inode],
                 capture_output=True, text=True, check=True).stdout
         except subprocess.CalledProcessError as e:
             print(f"istat failed for inode {inode}: {e.stderr.strip()}", file=sys.stderr)
@@ -110,11 +112,11 @@ def write_synthetic(path, runs, offset, cluster_size):
 def main(argv=None):
     args = parse_args(argv)
 
-    inodes = read_inodes(args.bad)
-    print(f"{len(inodes)} inodes read from {args.bad}", file=sys.stderr)
+    inodes = read_inodes(args.findbad_log)
+    print(f"{len(inodes)} inodes read from {args.findbad_log}", file=sys.stderr)
 
     sector_offset = args.offset // args.sector_size
-    clusters = collect_clusters(inodes, args.img, sector_offset, args.max_cluster)
+    clusters = collect_clusters(inodes, args.image, sector_offset, args.max_cluster)
     runs = coalesce_runs(clusters)
 
     total = sum(length * args.cluster_size for _, length in runs)
