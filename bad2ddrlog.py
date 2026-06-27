@@ -26,8 +26,9 @@ def parse_args(argv=None):
                    help="disk image (or device) the NTFS partition lives in")
     p.add_argument("-o", "--offset", type=int, required=True,
                    help="partition start, in bytes (e.g. sdb2 start)")
-    p.add_argument("-s", "--sector-offset", required=True,
-                   help="partition start, in sectors, passed to istat -o")
+    p.add_argument("-s", "--sector-size", type=int, default=512,
+                   help="sector size in bytes; the partition start in sectors "
+                        "(passed to istat -o) is offset/sector-size (default: 512)")
     p.add_argument("-c", "--cluster-size", type=int, default=4096,
                    help="NTFS cluster size in bytes (default: 4096)")
     p.add_argument("-m", "--max-cluster", type=int, default=None,
@@ -69,7 +70,7 @@ def collect_clusters(inodes, img, sector_offset, max_cluster):
     for inode in inodes:
         try:
             out = subprocess.run(
-                ["istat", "-o", sector_offset, img, inode],
+                ["istat", "-o", str(sector_offset), img, inode],
                 capture_output=True, text=True, check=True).stdout
         except subprocess.CalledProcessError as e:
             print(f"istat failed for inode {inode}: {e.stderr.strip()}", file=sys.stderr)
@@ -125,7 +126,8 @@ def main(argv=None):
     inodes = read_inodes(args.bad)
     print(f"{len(inodes)} inodes read from {args.bad}", file=sys.stderr)
 
-    clusters = collect_clusters(inodes, args.img, args.sector_offset, args.max_cluster)
+    sector_offset = args.offset // args.sector_size
+    clusters = collect_clusters(inodes, args.img, sector_offset, args.max_cluster)
     runs = coalesce_runs(clusters)
 
     if args.blocks:
